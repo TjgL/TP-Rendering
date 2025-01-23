@@ -17,9 +17,13 @@ int main()
                         {
                             .layout = {gl::VertexAttribute::Position2D{0}},
                             .data = {
-                                -1.f, -1.f,
-                                +1.f, -1.f,
-                                0.f, +1.f
+                                +0.5f, -0.5f, // R-B
+                                +0.5f, +0.5f, // R-T
+                                -0.5f, -0.5f, // L-B
+
+                                -0.5f, -0.5f, // L-B
+                                -0.5f, +0.5f, // L-T
+                                +0.5f, +0.5f // R-T
                             },
                         }},
                 }};
