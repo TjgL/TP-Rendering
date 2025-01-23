@@ -29,7 +29,13 @@ int main()
                     },
                 }};
 
-        gl::bind_default_shader();
+        auto const shader = gl::Shader{
+            {
+                .vertex = gl::ShaderSource::File{"res/vertex.glsl"},
+                .fragment = gl::ShaderSource::File{"res/fragment.glsl"}
+            }};
+
+        shader.bind();
         triangle_mesh.draw();
     }
 }
