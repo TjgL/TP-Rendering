@@ -17,15 +17,16 @@ int main()
                         {
                             .layout = {gl::VertexAttribute::Position2D{0}},
                             .data = {
-                                +0.5f, -0.5f, // R-B
+                                -0.5f, +0.5f, // L-T
                                 +0.5f, +0.5f, // R-T
                                 -0.5f, -0.5f, // L-B
-
-                                -0.5f, -0.5f, // L-B
-                                -0.5f, +0.5f, // L-T
-                                +0.5f, +0.5f // R-T
+                                +0.5f, -0.5f, // R-B
                             },
                         }},
+                    .index_buffer = {
+                        0, 1, 2,
+                        1, 2, 3
+                    },
                 }};
 
         gl::bind_default_shader();
