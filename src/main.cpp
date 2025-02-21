@@ -70,17 +70,43 @@ void loop() {
                 {
                     .vertex_buffers = {
                         {
-                            .layout = {gl::VertexAttribute::Position2D{0}, gl::VertexAttribute::UV{1}},
+                            .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::UV{1}},
                             .data = {
-                                -0.25f, +0.25f, 0, 1,
-                                +0.25f, +0.25f, 1, 1,
-                                -0.25f, -0.25f, 0, 0,
-                                +0.25f, -0.25f, 1, 0,
+                                -1.f, -1.f, -1.f,   0.f, 0.f,
+                                1.f, -1.f, -1.f,    1.f, 0.f,
+                                1.f, 1.f, -1.f,     1.f, 1.f,
+                                -1.f, 1.f, -1.f,    0.f, 1.f,
+
+                                -1.f, -1.f, 1.f,    0.f, 0.f,
+                                1.f, -1.f, 1.f,     1.f, 0.f,
+                                1.f, 1.f, 1.f,      1.f, 1.f,
+                                -1.f, 1.f, 1.f,     0.f, 1.f,
                             },
                         }},
                     .index_buffer = {
+                        // Bottom
                         0, 1, 2,
-                        1, 2, 3
+                        2, 3, 0,
+
+                        // Front
+                        0, 1, 5,
+                        5, 4, 0,
+
+                        // Left
+                        0, 3, 7,
+                        7, 4, 0,
+
+                        // Back
+                        2, 3, 7,
+                        7, 6, 2,
+
+                        // Right
+                        1, 2, 6,
+                        6, 5, 1,
+
+                        // Top
+                        4, 5, 6,
+                        6, 7, 4
                     },
                 }};
 
@@ -91,7 +117,7 @@ void loop() {
                 }};
 
         shader.bind();
-        shader.set_uniform("view_projection_matrix", model_view_projection_matrix);
+        shader.set_uniform("view_projection_matrix", view_projection_matrix);
         shader.set_uniform("my_texture", texture);
 
         cube_mesh.draw();
