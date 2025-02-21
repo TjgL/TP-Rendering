@@ -1,9 +1,18 @@
 #include <iostream>
+#include <glm/ext/matrix_transform.hpp>
 
+#include "Settings.h"
 #include "opengl-framework/opengl-framework.hpp" // Inclue la librairie qui va nous servir à faire du rendu
+#include "glm/ext/matrix_clip_space.hpp"
+
+float fieldOfView = glm::radians(70.f);
+
+glm::mat4 view_matrix;
+glm::mat4 projection_matrix;
 
 void initialization();
 void loop();
+void mousePressedCallback(gl::MousePressedEvent const& event);
 
 int main()
 {
@@ -15,15 +24,18 @@ void initialization() {
     // Initialisation
     gl::init("TPs de Rendering"); // On crée une fenêtre et on choisit son nom
     gl::maximize_window(); // On peut la maximiser si on veut
+
+    auto camera = gl::Camera{};
+    view_matrix = camera.view_matrix();
+    projection_matrix = glm::infinitePerspective(fieldOfView, gl::framebuffer_aspect_ratio(), 0.001f);
+
+    gl::set_events_callbacks({camera.events_callbacks()});
 }
 
 void loop() {
     while (gl::window_is_open())
     {
-        glEnable(GL_BLEND);
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-
-        glClearColor(0.f, 0.f, .5f, 1.f);
+        glClearColor(0.f, 0.f, 1.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         auto const triangle_mesh = gl::Mesh{
@@ -50,15 +62,10 @@ void loop() {
                     .fragment = gl::ShaderSource::File{"res/fragment.glsl"}
                 }};
 
-        float offset = 0.f;
-        for (int i = 100; i > 0; i--) {
-            offset -= gl::delta_time_in_seconds();
-            shader.bind();
-            shader.set_uniform("color", glm::vec4{1.f, 1.f, 0.f, static_cast<float>(i) / 100.f});
-            shader.set_uniform("aspect_ratio", gl::framebuffer_aspect_ratio());
-            shader.set_uniform("time", gl::time_in_seconds() + offset);
+        shader.bind();
+        shader.set_uniform("color", glm::vec4{1.f, 1.f, 0.f, 1.f});
+        shader.set_uniform("view_projection_matrix", projection_matrix * view_matrix);
 
-            triangle_mesh.draw();
-        }
+        triangle_mesh.draw();
     }
 }
