@@ -1,11 +1,8 @@
-#include <iostream>
-#include <glm/ext/matrix_transform.hpp>
-
 #include "Settings.h"
 #include "opengl-framework/opengl-framework.hpp" // Inclue la librairie qui va nous servir à faire du rendu
 #include "glm/ext/matrix_clip_space.hpp"
 
-float fieldOfView = glm::radians(70.f);
+Settings settings;
 
 glm::mat4 view_matrix;
 glm::mat4 projection_matrix;
@@ -27,7 +24,16 @@ void initialization() {
 
     auto camera = gl::Camera{};
     view_matrix = camera.view_matrix();
-    projection_matrix = glm::infinitePerspective(fieldOfView, gl::framebuffer_aspect_ratio(), 0.001f);
+
+    switch (settings.projectionType) {
+        case ProjectionType::Orthographic:
+            projection_matrix = glm::ortho(-2.0f, 2.0f, -1.0f, 1.0f, 0.1f, 100.0f);
+            break;
+
+        case ProjectionType::Perspective:
+            projection_matrix = glm::infinitePerspective(settings.fieldOfView, gl::framebuffer_aspect_ratio(), 0.001f);
+            break;
+    }
 
     gl::set_events_callbacks({camera.events_callbacks()});
 }
