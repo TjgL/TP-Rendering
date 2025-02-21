@@ -1,5 +1,5 @@
 #include "Settings.h"
-#include "opengl-framework/opengl-framework.hpp" // Inclue la librairie qui va nous servir à faire du rendu
+#include "opengl-framework/opengl-framework.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 
@@ -7,14 +7,29 @@ Settings settings;
 
 gl::Camera camera;
 glm::mat4 projection_matrix;
+
+gl::Texture* object_texture;
+gl::Shader* object_shader;
+
 gl::RenderTarget* render_target;
+gl::Shader* screen_shader;
 
+void init();
+void mainLoop();
+void drawRenderTarget();
+void render();
+void frameBufferResizedEvent(gl::FramebufferResizedEvent const& e);
+void cleanup();
 
-int main()
-{
-    // Initialisation
-    gl::init("TPs de Rendering"); // On crée une fenêtre et on choisit son nom
-    gl::maximize_window(); // On peut la maximiser si on veut
+int main() {
+    init();
+    mainLoop();
+    cleanup();
+}
+
+void init() {
+    gl::init("TPs de Rendering");
+    gl::maximize_window();
 
     glEnable(GL_DEPTH_TEST);
 
@@ -30,7 +45,7 @@ int main()
         break;
     }
 
-    auto render_target = gl::RenderTarget{gl::RenderTarget_Descriptor{
+    render_target = new gl::RenderTarget{gl::RenderTarget_Descriptor {
         .width = gl::framebuffer_width_in_pixels(),
         .height = gl::framebuffer_height_in_pixels(),
         .color_textures = {
@@ -57,13 +72,10 @@ int main()
 
     gl::set_events_callbacks({
         camera.events_callbacks(),
-        {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
-        if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
-            render_target.resize(e.width_in_pixels, e.height_in_pixels);
-        }},
+        {.on_framebuffer_resized = frameBufferResizedEvent},
     });
 
-    gl::Texture texture = gl::Texture {
+    object_texture = new gl::Texture {
         gl::TextureSource::File {
             .path = "res/texture.png",
             .flip_y = true,
@@ -77,75 +89,121 @@ int main()
         }
     };
 
+    object_shader = new gl::Shader{
+    {
+        .vertex = gl::ShaderSource::File{"res/object.vert"},
+        .fragment = gl::ShaderSource::File{"res/object.frag"}
+    }};
+
+    screen_shader = new gl::Shader{
+    {
+        .vertex = gl::ShaderSource::File{"res/screen.vert"},
+        .fragment = gl::ShaderSource::File{"res/screen.frag"}
+    }};
+}
+
+
+void mainLoop() {
     while (gl::window_is_open()) {
-        render_target.render([&]() {
-            glClearColor(1.f, 0.f, 0.f, 1.f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            glm::mat4 const view_matrix = camera.view_matrix();
-            glm::mat4 const rotation = glm::rotate(glm::mat4{1.f}, gl::time_in_seconds(), glm::vec3{0.f, 0.f, 1.f});
-
-            glm::mat4 const view_projection_matrix = projection_matrix * view_matrix;
-            glm::mat4 const model_view_projection_matrix = view_projection_matrix * rotation;
-
-
-            auto const cube_mesh = gl::Mesh{
-                    {
-                        .vertex_buffers = {
-                            {
-                                .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::UV{1}},
-                                .data = {
-                                    -1.f, -1.f, -1.f,   0.f, 0.f,
-                                    1.f, -1.f, -1.f,    1.f, 0.f,
-                                    1.f, 1.f, -1.f,     1.f, 1.f,
-                                    -1.f, 1.f, -1.f,    0.f, 1.f,
-
-                                    -1.f, -1.f, 1.f,    0.f, 0.f,
-                                    1.f, -1.f, 1.f,     1.f, 0.f,
-                                    1.f, 1.f, 1.f,      1.f, 1.f,
-                                    -1.f, 1.f, 1.f,     0.f, 1.f,
-                                },
-                            }},
-                        .index_buffer = {
-                            // Bottom
-                            0, 1, 2,
-                            2, 3, 0,
-
-                            // Front
-                            0, 1, 5,
-                            5, 4, 0,
-
-                            // Left
-                            0, 3, 7,
-                            7, 4, 0,
-
-                            // Back
-                            2, 3, 7,
-                            7, 6, 2,
-
-                            // Right
-                            1, 2, 6,
-                            6, 5, 1,
-
-                            // Top
-                            4, 5, 6,
-                            6, 7, 4
-                        },
-                    }};
-
-            auto const shader = gl::Shader{
-                    {
-                        .vertex = gl::ShaderSource::File{"res/vertex.glsl"},
-                        .fragment = gl::ShaderSource::File{"res/fragment.glsl"}
-                    }};
-
-            shader.bind();
-            shader.set_uniform("view_projection_matrix", view_projection_matrix);
-            shader.set_uniform("my_texture", texture);
-
-            cube_mesh.draw();
-        });
-
-        // Draw render target texture on mesh here
+        render_target->render(drawRenderTarget);
+        render();
     }
+}
+
+void drawRenderTarget() {
+    glClearColor(1.f, 0.f, 0.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glm::mat4 const view_matrix = camera.view_matrix();
+    glm::mat4 const view_projection_matrix = projection_matrix * view_matrix;
+
+    auto const cube_mesh = gl::Mesh{
+        {
+            .vertex_buffers = {
+                {
+                    .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::UV{1}},
+                    .data = {
+                        -0.25f, -0.25f, -0.25f,   0.f, 0.f,
+                        0.25f, -0.25f, -0.25f,    1.f, 0.f,
+                        0.25f, 0.25f, -0.25f,     1.f, 1.f,
+                        -0.25f, 0.25f, -0.25f,    0.f, 1.f,
+
+                        -0.25f, -0.25f, 0.25f,    0.f, 0.f,
+                        0.25f, -0.25f, 0.25f,     1.f, 0.f,
+                        0.25f, 0.25f, 0.25f,      1.f, 1.f,
+                        -0.25f, 0.25f, 0.25f,     0.f, 1.f,
+                    },
+                }},
+            .index_buffer = {
+                // Bottom
+                0, 1, 2,
+                2, 3, 0,
+
+                // Front
+                0, 1, 5,
+                5, 4, 0,
+
+                // Left
+                0, 3, 7,
+                7, 4, 0,
+
+                // Back
+                2, 3, 7,
+                7, 6, 2,
+
+                // Right
+                1, 2, 6,
+                6, 5, 1,
+
+                // Top
+                4, 5, 6,
+                6, 7, 4
+            },
+        }};
+
+    object_shader->bind();
+    object_shader->set_uniform("view_projection_matrix", view_projection_matrix);
+    object_shader->set_uniform("my_texture", *object_texture);
+
+    cube_mesh.draw();
+}
+
+void render() {
+    glClearColor(0.12f, 0.16f, 0.52f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    auto const plane = gl::Mesh {
+        {
+            .vertex_buffers = {
+                {
+                    .layout = {gl::VertexAttribute::Position2D{0}, gl::VertexAttribute::UV{1}},
+                    .data = {
+                        -1, 1,      0, 1,
+                        1, 1,       1, 1,
+                        -1, -1,     0, 0,
+                        1, -1,      1, 0,
+                    },
+                }},
+            .index_buffer = {
+                0, 1, 2,
+                1, 2, 3
+            },
+        }
+    };
+
+    screen_shader->bind();
+    screen_shader->set_uniform("render_target_texture", render_target->color_texture(0));
+
+    plane.draw();
+}
+
+void frameBufferResizedEvent(gl::FramebufferResizedEvent const& e) {
+    if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
+        render_target->resize(e.width_in_pixels, e.height_in_pixels);
+}
+
+void cleanup() {
+    delete render_target;
+    delete object_texture;
+    delete object_shader;
+    delete screen_shader;
 }
