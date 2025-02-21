@@ -1,10 +1,13 @@
+
+
 #include "Settings.h"
 #include "opengl-framework/opengl-framework.hpp" // Inclue la librairie qui va nous servir à faire du rendu
 #include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
 
 Settings settings;
 
-glm::mat4 view_matrix;
+gl::Camera camera;
 glm::mat4 projection_matrix;
 
 void initialization();
@@ -22,8 +25,7 @@ void initialization() {
     gl::init("TPs de Rendering"); // On crée une fenêtre et on choisit son nom
     gl::maximize_window(); // On peut la maximiser si on veut
 
-    auto camera = gl::Camera{};
-    view_matrix = camera.view_matrix();
+    camera = gl::Camera{};
 
     switch (settings.projectionType) {
         case ProjectionType::Orthographic:
@@ -41,6 +43,13 @@ void initialization() {
 void loop() {
     while (gl::window_is_open())
     {
+        glm::mat4 const view_matrix = camera.view_matrix();
+        glm::mat4 const rotation = glm::rotate(glm::mat4{1.f}, gl::time_in_seconds(), glm::vec3{0.f, 0.f, 1.f});
+        glm::mat4 const translation = glm::translate(glm::mat4{1.f}, glm::vec3{0.f, 1.f, 0.f});
+
+        glm::mat4 const view_projection_matrix = projection_matrix * view_matrix;
+        glm::mat4 const model_view_projection_matrix = view_projection_matrix * rotation * translation;
+
         glClearColor(0.f, 0.f, 1.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -70,7 +79,7 @@ void loop() {
 
         shader.bind();
         shader.set_uniform("color", glm::vec4{1.f, 1.f, 0.f, 1.f});
-        shader.set_uniform("view_projection_matrix", projection_matrix * view_matrix);
+        shader.set_uniform("view_projection_matrix", model_view_projection_matrix);
 
         triangle_mesh.draw();
     }
