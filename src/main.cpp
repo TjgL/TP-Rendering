@@ -1,5 +1,3 @@
-
-
 #include "Settings.h"
 #include "opengl-framework/opengl-framework.hpp" // Inclue la librairie qui va nous servir à faire du rendu
 #include "glm/ext/matrix_clip_space.hpp"
@@ -32,17 +30,31 @@ void initialization() {
     switch (settings.projectionType) {
         case ProjectionType::Orthographic:
             projection_matrix = glm::ortho(-2.0f, 2.0f, -1.0f, 1.0f, 0.1f, 100.0f);
-            break;
+        break;
 
         case ProjectionType::Perspective:
             projection_matrix = glm::infinitePerspective(settings.fieldOfView, gl::framebuffer_aspect_ratio(), 0.001f);
-            break;
+        break;
     }
 
     gl::set_events_callbacks({camera.events_callbacks()});
 }
 
 void loop() {
+    gl::Texture texture = gl::Texture {
+        gl::TextureSource::File {
+            .path = "res/texture.png",
+            .flip_y = true,
+            .texture_format = gl::InternalFormat::RGBA8
+        },
+        gl::TextureOptions {
+            .minification_filter = gl::Filter::Linear,
+            .magnification_filter = gl::Filter::Linear,
+            .wrap_x = gl::Wrap::Repeat,
+            .wrap_y = gl::Wrap::Repeat,
+        }
+    };
+
     while (gl::window_is_open())
     {
         glm::mat4 const view_matrix = camera.view_matrix();
@@ -80,6 +92,7 @@ void loop() {
 
         shader.bind();
         shader.set_uniform("view_projection_matrix", model_view_projection_matrix);
+        shader.set_uniform("my_texture", texture);
 
         cube_mesh.draw();
     }
