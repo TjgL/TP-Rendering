@@ -25,6 +25,8 @@ void initialization() {
     gl::init("TPs de Rendering"); // On crée une fenêtre et on choisit son nom
     gl::maximize_window(); // On peut la maximiser si on veut
 
+    glEnable(GL_DEPTH_TEST);
+
     camera = gl::Camera{};
 
     switch (settings.projectionType) {
@@ -50,7 +52,7 @@ void loop() {
         glm::mat4 const model_view_projection_matrix = view_projection_matrix * rotation;
 
         glClearColor(0.f, 0.f, 1.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         auto const triangle_mesh = gl::Mesh{
                 {
@@ -58,15 +60,15 @@ void loop() {
                         {
                             .layout = {gl::VertexAttribute::Position3D{0}},
                             .data = {
-                                -.25f, -.25f, -.25f,
-                                .25f, -.25f, -.25f,
-                                .25f, .25f, -.25f,
-                                -.25f, .25f, -.25f,
+                                -1.f, -1.f, -1.f,
+                                1.f, -1.f, -1.f,
+                                1.f, 1.f, -1.f,
+                                -1.f, 1.f, -1.f,
 
-                                -.25f, -.25f, .25f,
-                                .25f, -.25f, .25f,
-                                .25f, .25f, .25f,
-                                -.25f, .25f, .25f,
+                                -1.f, -1.f, 1.f,
+                                1.f, -1.f, 1.f,
+                                1.f, 1.f, 1.f,
+                                -1.f, 1.f, 1.f,
                             },
                         }},
                     .index_buffer = {
@@ -103,7 +105,6 @@ void loop() {
                 }};
 
         shader.bind();
-        shader.set_uniform("color", glm::vec4{1.f, 1.f, 0.f, 1.f});
         shader.set_uniform("view_projection_matrix", model_view_projection_matrix);
 
         triangle_mesh.draw();
