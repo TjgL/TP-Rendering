@@ -135,6 +135,8 @@ void drawRenderTarget() {
     object_shader->set_uniform("directional_light.color", glm::vec3{1.f, 1.f, 1.f});
     object_shader->set_uniform("directional_light.ambient", glm::vec3{0.3f, 0.3f, 0.3f});
 
+    object_shader->set_uniform("point_light.position", glm::vec3{2.f, 0.f, 0.f});
+    object_shader->set_uniform("point_light.diffuse", glm::vec3{1.f, 0.f, 0.f});
 
     mesh->draw();
 }
