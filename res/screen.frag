@@ -1,5 +1,6 @@
 #version 410
 
+uniform vec3 light_direction;
 uniform sampler2D render_target_texture;
 in vec2 uv;
 
@@ -26,13 +27,5 @@ vec3 hsv2rgb(vec3 c)
 
 void main() {
     vec4 texture_color = texture(render_target_texture, uv);
-
-    // Color clamp
-    // out_color = vec4(texture_color.x, 0, 0, 1.);
-
-    vec3 hsv = rgb2hsv(texture_color.xyz);
-    hsv.y = 0; // Change the float to control the typ of effect that we have
-    texture_color = vec4(hsv2rgb(hsv), texture_color.w);
-
     out_color = vec4(texture_color.xyz, 1.);
 }

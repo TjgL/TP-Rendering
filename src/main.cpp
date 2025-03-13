@@ -1,5 +1,5 @@
-#include <iostream>
 #include <utils.h>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
 
 #include "Settings.h"
@@ -124,9 +124,13 @@ void drawRenderTarget() {
     glm::mat4 const view_matrix = camera.view_matrix();
     glm::mat4 const view_projection_matrix = projection_matrix * view_matrix;
 
+    glm::mat4 const rotation = glm::rotate(glm::mat4{1.f}, glm::radians(90.f), glm::vec3{1.f, 0.f, 0.f});
+    glm::mat4 const model_view_projection_matrix = view_projection_matrix * rotation;
+
     object_shader->bind();
-    object_shader->set_uniform("view_projection_matrix", view_projection_matrix);
+    object_shader->set_uniform("view_projection_matrix", model_view_projection_matrix);
     object_shader->set_uniform("my_texture", *object_texture);
+    object_shader->set_uniform("light_direction", glm::vec3{-2.0f, -1.0f, 0.0f});
 
     mesh->draw();
 }

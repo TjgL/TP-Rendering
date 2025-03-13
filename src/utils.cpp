@@ -15,16 +15,16 @@ bool LoadMesh(std::filesystem::path const &path, gl::Mesh*& loadedMesh) {
     auto vertices = std::vector<float>{};
     for (auto const& shape : reader.GetShapes()) {
         for (auto const& idx : shape.mesh.indices) {
-            // Position
+            // Positions
             vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 0]);
-            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 1]);
-            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 2]);
+            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 1]); // Can be inverted with the next line to fix incorrect model orientation
+            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 2]); // But it also must be done for the normals
 
-            // UV
+            // UVs
             vertices.push_back(reader.GetAttrib().texcoords[2 * idx.texcoord_index + 0]);
             vertices.push_back(reader.GetAttrib().texcoords[2 * idx.texcoord_index + 1]);
 
-            // Normale
+            // Normals
             vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 0]);
             vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 1]);
             vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 2]);
@@ -39,7 +39,8 @@ bool LoadMesh(std::filesystem::path const &path, gl::Mesh*& loadedMesh) {
                             gl::VertexAttribute::UV{1},
                             gl::VertexAttribute::Normal3D{2}},
                         .data = vertices,
-                    }},
+                    }
+                },
             }
     };
 
