@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "Settings.h"
 #include "opengl-framework/opengl-framework.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
@@ -20,6 +22,8 @@ void drawRenderTarget();
 void render();
 void frameBufferResizedEvent(gl::FramebufferResizedEvent const& e);
 void cleanup();
+
+gl::Mesh load_mesh(std::filesystem::path const& path);
 
 int main() {
     init();
@@ -100,6 +104,8 @@ void init() {
         .vertex = gl::ShaderSource::File{"res/screen.vert"},
         .fragment = gl::ShaderSource::File{"res/screen.frag"}
     }};
+
+    auto boat_mesh = load_mesh("res\\fourareen.obj");
 }
 
 
@@ -206,4 +212,45 @@ void cleanup() {
     delete object_texture;
     delete object_shader;
     delete screen_shader;
+}
+
+gl::Mesh load_mesh(std::filesystem::path const& path) {
+    auto reader = tinyobj::ObjReader();
+    reader.ParseFromFile(gl::make_absolute_path(path).string(), {});
+
+    if (!reader.Error().empty())
+        throw std::runtime_error("Failed to read 3D model:\n" + reader.Error());
+    if (!reader.Warning().empty())
+        std::cout << "Warning while reading 3D mode:\n " << reader.Warning() << "\n";
+
+    auto vertices = std::vector<float>{};
+    for (auto const& shape : reader.GetShapes()) {
+        for (auto const& idx : shape.mesh.indices) {
+            // Position
+            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 0]);
+            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 1]);
+            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 2]);
+
+            // UV
+            vertices.push_back(reader.GetAttrib().texcoords[2 * idx.texcoord_index + 0]);
+            vertices.push_back(reader.GetAttrib().texcoords[2 * idx.texcoord_index + 1]);
+
+            // Normale
+            vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 0]);
+            vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 1]);
+            vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 2]);
+        }
+    }
+
+    auto mesh = gl::Mesh {
+        {
+            .vertex_buffers = {
+                {
+                    .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::UV{1}, gl::VertexAttribute::Normal3D{2}},
+                    .data = vertices,
+                }},
+        }
+    };
+
+    return mesh;
 }
