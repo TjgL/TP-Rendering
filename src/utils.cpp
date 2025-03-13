@@ -32,16 +32,16 @@ bool LoadMesh(std::filesystem::path const &path, gl::Mesh*& loadedMesh) {
     }
 
     loadedMesh = new gl::Mesh {
-            {
-                .vertex_buffers = {
-                    {
-                        .layout = {gl::VertexAttribute::Position3D{0},
-                            gl::VertexAttribute::UV{1},
-                            gl::VertexAttribute::Normal3D{2}},
-                        .data = vertices,
-                    }
-                },
-            }
+        {
+            .vertex_buffers = {
+                {
+                    .layout = {gl::VertexAttribute::Position3D{0},
+                        gl::VertexAttribute::UV{1},
+                        gl::VertexAttribute::Normal3D{2}},
+                    .data = vertices,
+                }
+            },
+        }
     };
 
     return true;

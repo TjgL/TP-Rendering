@@ -83,7 +83,7 @@ void init() {
 
     object_texture = new gl::Texture {
         gl::TextureSource::File {
-            .path = "res/texture.png",
+            .path = "res\\fourareen2K_albedo.jpg",
             .flip_y = true,
             .texture_format = gl::InternalFormat::RGBA8
         },
@@ -119,7 +119,7 @@ void mainLoop() {
 }
 
 void drawRenderTarget() {
-    glClearColor(1.f, 0.f, 0.f, 1.f);
+    glClearColor(0.4f, 0.57f, 0.62f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glm::mat4 const view_matrix = camera.view_matrix();
     glm::mat4 const view_projection_matrix = projection_matrix * view_matrix;
@@ -130,7 +130,9 @@ void drawRenderTarget() {
     object_shader->bind();
     object_shader->set_uniform("view_projection_matrix", model_view_projection_matrix);
     object_shader->set_uniform("my_texture", *object_texture);
-    object_shader->set_uniform("light_direction", glm::vec3{-2.0f, -1.0f, 0.0f});
+    object_shader->set_uniform("light_direction", glm::vec3{0.2, 0.3, -1});
+    object_shader->set_uniform("light_color", glm::vec3{1.f, 1.f, 1.f});
+    object_shader->set_uniform("light_intensity", 1.f);
 
     mesh->draw();
 }
