@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 project(TPs-Rendering)
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*)
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME}
+        src/main.cpp
+        src/utils.cpp
+)
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 

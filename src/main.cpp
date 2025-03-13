@@ -1,9 +1,10 @@
 #include <iostream>
+#include <utils.h>
+#include <glm/ext/quaternion_common.hpp>
 
 #include "Settings.h"
 #include "opengl-framework/opengl-framework.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
-#include "glm/ext/matrix_transform.hpp"
 
 Settings settings;
 
@@ -16,6 +17,8 @@ gl::Shader* object_shader;
 gl::RenderTarget* render_target;
 gl::Shader* screen_shader;
 
+gl::Mesh* mesh;
+
 void init();
 void mainLoop();
 void drawRenderTarget();
@@ -23,7 +26,6 @@ void render();
 void frameBufferResizedEvent(gl::FramebufferResizedEvent const& e);
 void cleanup();
 
-gl::Mesh load_mesh(std::filesystem::path const& path);
 
 int main() {
     init();
@@ -105,7 +107,7 @@ void init() {
         .fragment = gl::ShaderSource::File{"res/screen.frag"}
     }};
 
-    auto boat_mesh = load_mesh("res\\fourareen.obj");
+    LoadMesh("res\\fourareen.obj", mesh);
 }
 
 
@@ -122,55 +124,11 @@ void drawRenderTarget() {
     glm::mat4 const view_matrix = camera.view_matrix();
     glm::mat4 const view_projection_matrix = projection_matrix * view_matrix;
 
-    auto const cube_mesh = gl::Mesh{
-        {
-            .vertex_buffers = {
-                {
-                    .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::UV{1}},
-                    .data = {
-                        -0.25f, -0.25f, -0.25f,   0.f, 0.f,
-                        0.25f, -0.25f, -0.25f,    1.f, 0.f,
-                        0.25f, 0.25f, -0.25f,     1.f, 1.f,
-                        -0.25f, 0.25f, -0.25f,    0.f, 1.f,
-
-                        -0.25f, -0.25f, 0.25f,    0.f, 0.f,
-                        0.25f, -0.25f, 0.25f,     1.f, 0.f,
-                        0.25f, 0.25f, 0.25f,      1.f, 1.f,
-                        -0.25f, 0.25f, 0.25f,     0.f, 1.f,
-                    },
-                }},
-            .index_buffer = {
-                // Bottom
-                0, 1, 2,
-                2, 3, 0,
-
-                // Front
-                0, 1, 5,
-                5, 4, 0,
-
-                // Left
-                0, 3, 7,
-                7, 4, 0,
-
-                // Back
-                2, 3, 7,
-                7, 6, 2,
-
-                // Right
-                1, 2, 6,
-                6, 5, 1,
-
-                // Top
-                4, 5, 6,
-                6, 7, 4
-            },
-        }};
-
     object_shader->bind();
     object_shader->set_uniform("view_projection_matrix", view_projection_matrix);
     object_shader->set_uniform("my_texture", *object_texture);
 
-    cube_mesh.draw();
+    mesh->draw();
 }
 
 void render() {
@@ -212,45 +170,4 @@ void cleanup() {
     delete object_texture;
     delete object_shader;
     delete screen_shader;
-}
-
-gl::Mesh load_mesh(std::filesystem::path const& path) {
-    auto reader = tinyobj::ObjReader();
-    reader.ParseFromFile(gl::make_absolute_path(path).string(), {});
-
-    if (!reader.Error().empty())
-        throw std::runtime_error("Failed to read 3D model:\n" + reader.Error());
-    if (!reader.Warning().empty())
-        std::cout << "Warning while reading 3D mode:\n " << reader.Warning() << "\n";
-
-    auto vertices = std::vector<float>{};
-    for (auto const& shape : reader.GetShapes()) {
-        for (auto const& idx : shape.mesh.indices) {
-            // Position
-            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 0]);
-            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 1]);
-            vertices.push_back(reader.GetAttrib().vertices[3 * idx.vertex_index + 2]);
-
-            // UV
-            vertices.push_back(reader.GetAttrib().texcoords[2 * idx.texcoord_index + 0]);
-            vertices.push_back(reader.GetAttrib().texcoords[2 * idx.texcoord_index + 1]);
-
-            // Normale
-            vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 0]);
-            vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 1]);
-            vertices.push_back(reader.GetAttrib().normals[3 * idx.normal_index + 2]);
-        }
-    }
-
-    auto mesh = gl::Mesh {
-        {
-            .vertex_buffers = {
-                {
-                    .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::UV{1}, gl::VertexAttribute::Normal3D{2}},
-                    .data = vertices,
-                }},
-        }
-    };
-
-    return mesh;
 }
