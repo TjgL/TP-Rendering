@@ -130,9 +130,13 @@ void drawRenderTarget() {
     object_shader->bind();
     object_shader->set_uniform("view_projection_matrix", model_view_projection_matrix);
     object_shader->set_uniform("my_texture", *object_texture);
+
     object_shader->set_uniform("light_direction", glm::vec3{0.2, 0.3, -1});
     object_shader->set_uniform("light_color", glm::vec3{1.f, 1.f, 1.f});
     object_shader->set_uniform("light_intensity", 1.f);
+
+    object_shader->set_uniform("ambient_color", glm::vec3{1.f, 1.f, 1.f});
+    object_shader->set_uniform("ambient_intensity", 0.3f);
 
     mesh->draw();
 }
