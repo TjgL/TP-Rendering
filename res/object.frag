@@ -22,23 +22,22 @@ in vec3 vertex_position;
 
 out vec4 out_color;
 
-vec3 CalcDirLight(DirLight light, vec3 normal);
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos);
+vec3 calc_dir_light(DirLight light, vec3 normal);
+vec3 calc_point_light(PointLight light, vec3 normal, vec3 fragPos);
 
 void main()
 {
-    vec3 norm = normalize(normals);
     vec4 texture_color = texture(my_texture, uv);
 
-    vec3 directional = CalcDirLight(directional_light, norm);
-    vec3 point = CalcPointLight(point_light, norm, vertex_position);
+    vec3 directional = calc_dir_light(directional_light, normals);
+    vec3 point = calc_point_light(point_light, normals, vertex_position);
 
     vec3 result = (directional + point) * texture_color.xyz;
 
     out_color = vec4(result.xyz, 1.);
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal)
+vec3 calc_dir_light(DirLight light, vec3 normal)
 {
     vec3 lightDir = normalize(-light.direction);
     float diff = max(dot(normal, lightDir), 0.0);
@@ -48,7 +47,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal)
     return (ambient + color);
 }
 
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos)
+vec3 calc_point_light(PointLight light, vec3 normal, vec3 fragPos)
 {
     vec3 lightDir = normalize(light.position - fragPos);
     float intensity = max(dot(normal, lightDir), 0.0);

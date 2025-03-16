@@ -121,14 +121,19 @@ void mainLoop() {
 void drawRenderTarget() {
     glClearColor(0.4f, 0.57f, 0.62f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glm::mat4 const view_matrix = camera.view_matrix();
-    glm::mat4 const view_projection_matrix = projection_matrix * view_matrix;
 
-    glm::mat4 const rotation = glm::rotate(glm::mat4{1.f}, glm::radians(90.f), glm::vec3{1.f, 0.f, 0.f});
+    glm::mat4 const translation = translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    glm::mat4 const rotation = rotate(glm::mat4{1.f}, gl::time_in_seconds(), glm::vec3{1.f, 0.f, 0.f});
+
+    glm::mat4 const model_matrix = translation * rotation;
+    glm::mat4 const normal_matrix = transpose(inverse(model_matrix));
+    glm::mat4 const view_projection_matrix = projection_matrix * camera.view_matrix();
+
     glm::mat4 const model_view_projection_matrix = view_projection_matrix * rotation;
 
     object_shader->bind();
     object_shader->set_uniform("view_projection_matrix", model_view_projection_matrix);
+    object_shader->set_uniform("normal_matrix", normal_matrix);
     object_shader->set_uniform("my_texture", *object_texture);
 
     object_shader->set_uniform("directional_light.direction", glm::vec3{0.2, 0.3, -1});
@@ -136,7 +141,7 @@ void drawRenderTarget() {
     object_shader->set_uniform("directional_light.ambient", glm::vec3{0.3f, 0.3f, 0.3f});
 
     object_shader->set_uniform("point_light.position", glm::vec3{2.f, 0.f, 0.f});
-    object_shader->set_uniform("point_light.diffuse", glm::vec3{1.f, 0.f, 0.f});
+    object_shader->set_uniform("point_light.diffuse", glm::vec3{2.f, 0.f, 0.f});
 
     mesh->draw();
 }
